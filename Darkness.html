@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ÐΛɌ₭ᑎΞ𐒡𐒡 Interactive Particle Logo</title>
+    <title>ÐΛɌ₭ᑎΞ𐒡𐒡</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -71,19 +71,15 @@
         .enter-button:hover .button-logo {
             transform: scale(1.1);
         }
-
-        /* Updated Hint Text Style (Even Fainter) */
         .hint-text {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            font-family: 'Josefin Sans', sans-serif;
+            font-family: 'Poppins', sans-serif;
             font-size: 14px;
             z-index: 11;
-            white-space: nowrap; /* Ensures the text stays on a single line */
-            
-            /* Even fainter gradient text effect */
+            white-space: nowrap;
             background: linear-gradient(90deg, 
                 rgba(255, 255, 255, 0.02), 
                 rgba(255, 255, 255, 0.1), 
@@ -93,20 +89,12 @@
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            
-            /* Animation */
             animation: sweep-animation 8s linear infinite;
         }
-
         @keyframes sweep-animation {
-            0% {
-                background-position: 200% 0;
-            }
-            100% {
-                background-position: -200% 0;
-            }
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
-
     </style>
 </head>
 <body>
@@ -116,15 +104,16 @@
         <img src="" alt="Custom Logo" class="button-logo" id="buttonLogoImage">
     </a>
 
-    <p class="hint-text">> Dev tip: > "dblclick" isn’t deprecated — it’s underrated ! </p>
+    <p class="hint-text">> Exclusive by ☬SHΞN™ </p>
 
     <script>
         /*
             Main Particle Logic
             Developed by ☬SHΞN™
+        
         */
 
-        const LOGO_URL = 'https://raw.githubusercontent.com/Shervinuri/Darkness/6b67b91551321e4c25f867d73a7aaecbd2bb1598/Picsart_25-07-18_00-33-51-482.png';
+        const IMAGE_URL = 'https://raw.githubusercontent.com/Shervinuri/Darkness/6b67b91551321e4c25f867d73a7aaecbd2bb1598/Picsart_25-07-18_00-33-51-482.png';
 
         const canvas = document.getElementById('particleCanvas');
         const ctx = canvas.getContext('2d');
@@ -132,15 +121,17 @@
         const buttonLogoImage = document.getElementById('buttonLogoImage');
 
         let particles = [];
-        let textParticlePositions = [];
+        let combinedParticlePositions = [];
         let isCircleMode = false;
         let isToggling = false;
         let inactivityTimer = null;
         let clickabilityTimer = null;
         let isPointerDown = false;
-        let hue = 0; // Global hue for RGB effect
+        let hue = 0;
+        let animationFrameId;
 
-        const MAX_PARTICLES = 10000;
+        const MAX_PARTICLES = 8000;
+        const PARTICLE_GAP = 3;
         const mouse = { x: null, y: null, radius: 150 };
 
         const setMousePosition = (e) => {
@@ -159,63 +150,56 @@
         canvas.addEventListener('mousemove', setMousePosition);
         canvas.addEventListener('touchmove', setMousePosition, { passive: true });
 
-        let clickCount = 0;
-        let clickTimer = null;
-        canvas.addEventListener('click', () => {
-            clickCount++;
-            if (clickCount === 1) {
-                clickTimer = setTimeout(() => { clickCount = 0; }, 300);
-            } else if (clickCount === 2) {
-                clearTimeout(clickTimer);
-                clickCount = 0;
-                toggleMode();
-            }
-        });
-
+        canvas.addEventListener('dblclick', () => toggleMode());
         window.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 'w') toggleMode();
         });
 
-        enterButton.addEventListener('click', () => {
+        enterButton.addEventListener('click', (e) => {
+            e.stopPropagation();
             clearTimeout(inactivityTimer);
         });
 
         class Particle {
-            constructor(x, y) {
-                this.x = x; this.y = y; this.size = 1.2;
-                this.baseX = x; this.baseY = y;
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.size = 1.5;
+                this.baseX = x;
+                this.baseY = y;
+                this.baseColor = color;
                 this.density = (Math.random() * 30) + 10;
                 this.isScattered = false;
             }
             draw() {
                 if (this.isScattered) {
-                    // Create a dynamic hue based on the global hue and particle's position for a rainbow effect
                     const particleHue = (hue + (this.x + this.y) * 0.3) % 360;
                     ctx.fillStyle = `hsl(${particleHue}, 100%, 60%)`;
                 } else {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.fillStyle = this.baseColor;
                 }
                 ctx.fillRect(this.x, this.y, this.size, this.size);
             }
             update() {
                 if (isPointerDown) {
-                    const dx = mouse.x - this.x; const dy = mouse.y - this.y;
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     if (distance < mouse.radius) {
                         this.isScattered = true;
                         const force = (mouse.radius - distance) / mouse.radius;
-                        this.x -= (dx / distance) * force * this.density * 0.4;
-                        this.y -= (dy / distance) * force * this.density * 0.4;
+                        this.x -= (dx / distance) * force * this.density * 0.6;
+                        this.y -= (dy / distance) * force * this.density * 0.6;
                     } else {
                         this.isScattered = false;
                     }
                 } else {
-                     this.isScattered = false;
+                    this.isScattered = false;
                 }
                 
                 if (!this.isScattered) {
-                    if (this.x !== this.baseX) this.x -= (this.x - this.baseX) / 15;
-                    if (this.y !== this.baseY) this.y -= (this.y - this.baseY) / 15;
+                    if (this.x !== this.baseX) this.x -= (this.x - this.baseX) / 25;
+                    if (this.y !== this.baseY) this.y -= (this.y - this.baseY) / 25;
                 }
             }
         }
@@ -233,7 +217,7 @@
                 enterButton.classList.add('visible');
                 const centerX = canvas.width / 2;
                 const centerY = canvas.height / 2;
-                const radius = Math.min(canvas.width, canvas.height) * 0.35;
+                const radius = Math.min(canvas.width, canvas.height) * 0.3;
                 particles.forEach((p, i) => {
                     const angle = (i / particles.length) * Math.PI * 2;
                     p.baseX = centerX + Math.cos(angle) * radius;
@@ -242,17 +226,17 @@
                 
                 clickabilityTimer = setTimeout(() => {
                     enterButton.classList.add('clickable');
-                }, 2000);
+                }, 1500);
 
                 inactivityTimer = setTimeout(() => {
                     if (isCircleMode) toggleMode();
-                }, 5000);
+                }, 8000);
             } else {
                 enterButton.classList.remove('visible');
                 particles.forEach((p, i) => {
-                    if (textParticlePositions[i]) {
-                        p.baseX = textParticlePositions[i].x;
-                        p.baseY = textParticlePositions[i].y;
+                    if (combinedParticlePositions[i]) {
+                        p.baseX = combinedParticlePositions[i].x;
+                        p.baseY = combinedParticlePositions[i].y;
                     }
                 });
             }
@@ -261,59 +245,130 @@
         }
 
         function init() {
-            buttonLogoImage.src = LOGO_URL;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            particles = []; textParticlePositions = [];
-            isCircleMode = false; isToggling = false;
-            enterButton.classList.remove('visible', 'clickable');
-            clearTimeout(inactivityTimer); clearTimeout(clickabilityTimer);
 
+            if (canvas.width === 0 || canvas.height === 0) {
+                requestAnimationFrame(init);
+                return;
+            }
+            
+            particles = [];
+            combinedParticlePositions = [];
+            isCircleMode = false;
+            isToggling = false;
+            enterButton.classList.remove('visible', 'clickable');
+            clearTimeout(inactivityTimer);
+            clearTimeout(clickabilityTimer);
+
+            const mainImage = new Image();
+            mainImage.crossOrigin = "Anonymous";
+            mainImage.src = IMAGE_URL;
+            buttonLogoImage.src = IMAGE_URL;
+
+            mainImage.onload = () => {
+                const imageParticles = [];
+                const canvasPadding = 0.85;
+                const maxCanvasDim = Math.min(canvas.width, canvas.height) * canvasPadding;
+                const scale = Math.min(maxCanvasDim / mainImage.width, maxCanvasDim / mainImage.height);
+                
+                const scaledWidth = mainImage.width * scale;
+                const scaledHeight = mainImage.height * scale;
+
+                const x = (canvas.width - scaledWidth) / 2;
+                const y = (canvas.height - scaledHeight) / 2 - 50; // Move image up
+                
+                ctx.drawImage(mainImage, x, y, scaledWidth, scaledHeight);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                for (let y = 0; y < imageData.height; y += PARTICLE_GAP) {
+                    for (let x = 0; x < imageData.width; x += PARTICLE_GAP) {
+                        if (imageData.data[(y * imageData.width + x) * 4 + 3] > 128) {
+                            const r = imageData.data[(y * imageData.width + x) * 4];
+                            const g = imageData.data[(y * imageData.width + x) * 4 + 1];
+                            const b = imageData.data[(y * imageData.width + x) * 4 + 2];
+                            const color = `rgb(${r},${g},${b})`;
+                            imageParticles.push({ x, y, color });
+                        }
+                    }
+                }
+                
+                addTextParticles(imageParticles);
+                animate();
+            };
+
+            mainImage.onerror = () => {
+                console.error("Failed to load the main image.");
+                ctx.fillStyle = 'white';
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Error Loading Image', canvas.width/2, canvas.height/2);
+            }
+        }
+
+        function addTextParticles(imageParticles) {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            const text = "ÐΛɌ₭ᑎΞ𐒡𐒡";
+            const fontSize = Math.min(canvas.width * 0.15, 80); 
+            ctx.font = `600 ${fontSize}px 'Poppins', sans-serif`;
             ctx.fillStyle = 'white';
-            // Reduced the font size multiplier to create more space from the edges
-            const fontSize = Math.min(canvas.width * 0.18, 120); 
-            ctx.font = `${600} ${fontSize}px 'Josefin Sans', sans-serif`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('ÐΛɌ₭ᑎΞ𐒡𐒡', canvas.width / 2, canvas.height / 2);
+            ctx.textAlign = 'center';
+
+            const lastImageParticleY = imageParticles.reduce((max, p) => Math.max(max, p.y), 0);
+            const textY = lastImageParticleY > 0 ? lastImageParticleY + fontSize : canvas.height / 2 + 120;
+
+            ctx.fillText(text, canvas.width / 2, textY);
 
             const textImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const potentialParticles = [];
-            const gap = 3;
-            for (let y = 0; y < textImageData.height; y += gap) {
-                for (let x = 0; x < textImageData.width; x += gap) {
+            const textParticles = [];
+            for (let y = 0; y < textImageData.height; y += PARTICLE_GAP) {
+                for (let x = 0; x < textImageData.width; x += PARTICLE_GAP) {
                     if (textImageData.data[(y * textImageData.width + x) * 4 + 3] > 128) {
-                        potentialParticles.push({ x, y });
+                        textParticles.push({ x, y, color: 'white' });
                     }
                 }
             }
 
-            // Shuffle the potential particles to take a random sample
-            for (let i = potentialParticles.length - 1; i > 0; i--) {
+            const allPositions = [...imageParticles, ...textParticles];
+            
+            for (let i = allPositions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [potentialParticles[i], potentialParticles[j]] = [potentialParticles[j], potentialParticles[i]];
+                [allPositions[i], allPositions[j]] = [allPositions[j], allPositions[i]];
+            }
+
+            particles = [];
+            const particleCount = Math.min(MAX_PARTICLES, allPositions.length);
+            for(let i = 0; i < particleCount; i++) {
+                const pData = allPositions[i];
+                particles.push(new Particle(pData.x, pData.y, pData.color));
             }
             
-            const particleCount = Math.min(MAX_PARTICLES, potentialParticles.length);
-            for(let i = 0; i < particleCount; i++) {
-                const pData = potentialParticles[i];
-                particles.push(new Particle(pData.x, pData.y));
-                textParticlePositions.push({ x: pData.x, y: pData.y });
-            }
+            combinedParticlePositions = particles.map(p => ({x: p.baseX, y: p.baseY}));
+
+            ctx.clearRect(0,0,canvas.width, canvas.height);
         }
 
         function animate() {
-            hue++; // Increment hue for the RGB effect
+            hue++;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update();
                 particles[i].draw();
             }
-            requestAnimationFrame(animate);
+            animationFrameId = requestAnimationFrame(animate);
         }
         
         init();
-        animate();
-        window.addEventListener('resize', init);
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(init, 250);
+        });
 
     </script>
 </body>
